@@ -1,0 +1,9 @@
+.git
+.github
+agent
+*.exe
+*.test
+*.out
+.env
+.env.*
+README.md
