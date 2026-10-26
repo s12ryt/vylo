@@ -3,7 +3,7 @@ package web
 
 import "embed"
 
-// FS 內含 index.html 與 thanks.html。
+// FS 內含頁面與附屬靜態資源（圖示、社群預覽圖、robots.txt）。
 //
-//go:embed index.html thanks.html
+//go:embed index.html thanks.html favicon.svg icon.png og.png robots.txt
 var FS embed.FS

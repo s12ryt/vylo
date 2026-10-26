@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+# /go 會觸發短網址 API 呼叫，不讓爬蟲消耗額度
+Disallow: /go
