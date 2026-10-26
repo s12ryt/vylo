@@ -36,6 +36,10 @@ func testStaticFS() fs.FS {
 	return fstest.MapFS{
 		"index.html":  {Data: []byte("<html><body>INDEX-PAGE-MARKER</body></html>")},
 		"thanks.html": {Data: []byte("<html><body>THANKS-PAGE-MARKER</body></html>")},
+		"favicon.svg": {Data: []byte(`<svg xmlns="http://www.w3.org/2000/svg"></svg>`)},
+		"icon.png":    {Data: []byte("ICON-PNG-MARKER")},
+		"og.png":      {Data: []byte("OG-PNG-MARKER")},
+		"robots.txt":  {Data: []byte("User-agent: *\nAllow: /\nDisallow: /go\n")},
 	}
 }
 
@@ -151,5 +155,65 @@ func TestNotFound(t *testing.T) {
 	srv.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/no-such-page", nil))
 	if rec.Code != http.StatusNotFound {
 		t.Errorf("未知路徑應為 404，得到 %d", rec.Code)
+	}
+}
+
+// 圖示、社群預覽圖、robots.txt 都要有內容且帶正確型別，否則瀏覽器會噴 404 並失去分享預覽。
+func TestStaticAssets(t *testing.T) {
+	srv := newTestServer(&mockShortener{})
+	for _, tt := range []struct{ path, contentType, marker string }{
+		{"/favicon.svg", "image/svg+xml", "svg"},
+		{"/favicon.ico", "image/png", "ICON-PNG-MARKER"},
+		{"/icon.png", "image/png", "ICON-PNG-MARKER"},
+		{"/og.png", "image/png", "OG-PNG-MARKER"},
+		{"/robots.txt", "text/plain", "Disallow: /go"},
+	} {
+		rec := httptest.NewRecorder()
+		srv.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, tt.path, nil))
+
+		if rec.Code != http.StatusOK {
+			t.Errorf("GET %s 應為 200，得到 %d", tt.path, rec.Code)
+			continue
+		}
+		if ct := rec.Header().Get("Content-Type"); !strings.Contains(ct, tt.contentType) {
+			t.Errorf("GET %s Content-Type 應含 %s，得到 %q", tt.path, tt.contentType, ct)
+		}
+		if !strings.Contains(rec.Body.String(), tt.marker) {
+			t.Errorf("GET %s 回應內容不含 %q，得到 %q", tt.path, tt.marker, rec.Body.String())
+		}
+		if cc := rec.Header().Get("Cache-Control"); !strings.Contains(cc, "max-age") {
+			t.Errorf("GET %s 應可快取，Cache-Control 得到 %q", tt.path, cc)
+		}
+	}
+}
+
+func TestSecurityHeaders(t *testing.T) {
+	srv := newTestServer(&mockShortener{})
+	for _, path := range []string{"/", "/thanks", "/go", "/healthz"} {
+		rec := httptest.NewRecorder()
+		srv.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+
+		if got := rec.Header().Get("X-Content-Type-Options"); got != "nosniff" {
+			t.Errorf("%s X-Content-Type-Options 應為 nosniff，得到 %q", path, got)
+		}
+		if got := rec.Header().Get("X-Frame-Options"); got != "DENY" {
+			t.Errorf("%s X-Frame-Options 應為 DENY，得到 %q", path, got)
+		}
+		if got := rec.Header().Get("Referrer-Policy"); got != "no-referrer" {
+			t.Errorf("%s Referrer-Policy 應為 no-referrer，得到 %q", path, got)
+		}
+		if csp := rec.Header().Get("Content-Security-Policy"); !strings.Contains(csp, "frame-ancestors 'none'") {
+			t.Errorf("%s CSP 應含 frame-ancestors 'none'，得到 %q", path, csp)
+		}
+	}
+}
+
+func TestGoIsNotCached(t *testing.T) {
+	srv := newTestServer(&mockShortener{result: "https://vylo.cc/abc123"})
+	rec := httptest.NewRecorder()
+	srv.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/go", nil))
+
+	if cc := rec.Header().Get("Cache-Control"); cc != "no-store" {
+		t.Errorf("/go 的 Cache-Control 應為 no-store，得到 %q", cc)
 	}
 }
