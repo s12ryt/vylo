@@ -46,9 +46,7 @@ VYLO_API_TOKEN=你的token go run ./cmd/server
 
 ## 部署到 VPS（Docker，推薦）
 
-鏡像由 GitHub Actions 自動建置並推送至 GHCR：`ghcr.io/s12ryt/vylo`（支援 `linux/amd64`、`linux/arm64`；標籤：`latest`、`main`、`vX.Y.Z`、`sha-xxxxxxx`）。
-
-> 鏡像繼承 repo 可見性（目前為 **private**）。VPS 上需先登入：建立具 `read:packages` 權限的 [Personal Access Token](https://github.com/settings/tokens)，然後 `docker login ghcr.io -u s12ryt -p <PAT>`。若把 package 設為 public 則免登入。
+鏡像由 GitHub Actions 自動建置並推送至 GHCR：`ghcr.io/s12ryt/vylo`（支援 `linux/amd64`、`linux/arm64`；標籤：`latest`、`main`、`vX.Y.Z`、`sha-xxxxxxx`）。倉庫與鏡像皆為 **public**，直接拉取免登入。
 
 ```bash
 docker run -d \

@@ -48,5 +48,8 @@
 | 編輯 | 更新 | README.md | 頂部 CI/Docker 徽章；新增 Docker 部署段（ghcr.io/s12ryt/vylo、private 拉取需 docker login） |
 | git | 執行 | git init -b main | 首次 repo；.gitignore 確認排除 vylo-server.exe |
 | git | 執行 | 10 個原子提交 | chore(go.mod)→feat(config/vylo/cache/web/server/app)→docs→ci(docker)→ci(workflows)；semantic 英文；e2e 在 web 之後（import web.FS） |
-| 發布 | 執行 | github create_repository s12ryt/vylo (private) + git push -u origin main | gh auth 供憑證 |
-| 驗證 | 執行 | gh run list/watch + gh api packages | 兩 workflow 綠 + ghcr 鏡像存在 |
+| 發布 | 執行 | github create_repository s12ryt/vylo (private 起步) + git push -u origin main | gh auth 供憑證（scopes 含 workflow） |
+| 變更 | 執行 | repo 改 public | 用戶指示「變成公開倉庫」；`gh repo edit --visibility public --accept-visibility-change-consequences` |
+| 驗證 | 執行 | Actions：CI 1m26s ✅（vet+test -race+build 全綠，遺留 A 正式關閉）；Docker 7m39s ✅ | run 40255233746/40255233748 |
+| 驗證 | 執行 | ghcr 鏡像匿名 tags/list 通過 | tags: main, latest, sha-3c14628；package 隨 repo 改 public（繼承可見性），pull 免登入；gh token 無 read:packages scope 故用 registry API 驗證 |
+| 編輯 | 更新 | README.md | Docker 段改為 public 直接拉取說明 |

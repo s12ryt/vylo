@@ -29,7 +29,7 @@
 | A | `go test -race ./...` | ✅ | 已改由 CI（ubuntu-latest）每次 push/PR 跑 `-race -count=1` 補驗（Windows 無 gcc 跑不了） |
 | B | 真實 Vylo token 端到端 | ⏸ | 部署時填入正式 VYLO_API_TOKEN，點一次 /go 確認真短鏈跳轉 |
 | C | Nginx/Caddy 反代 + HTTPS | ⏸ | 部署階段；記得 TARGET_URL 改正式域名 |
-| D | VPS 實機 `docker run` ghcr 鏡像 | ⏸ | 鏡像 private：先 `docker login ghcr.io`（PAT read:packages） |
+| D | VPS 實機 `docker run` ghcr 鏡像 | ⏸ | 鏡像已驗證 public（匿名 tags/list 通過：main/latest/sha-3c14628），pull 免登入 |
 
 ## 明確不做（依需求確認）
 
