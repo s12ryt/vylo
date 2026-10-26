@@ -1,0 +1,19 @@
+# 執行檔
+vylo-server.exe
+vylo-server
+*.exe
+
+# 環境變數 / 秘密
+.env
+.env.*
+
+# Go
+*.test
+*.out
+vendor/
+
+# 作業系統 / 編輯器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
