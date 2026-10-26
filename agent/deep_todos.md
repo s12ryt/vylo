@@ -21,15 +21,19 @@
 | 13 | Dockerfile + .dockerignore（multi-stage、非 root、HEALTHCHECK） | ✅ | 本機無 docker，建置驗證交給 Actions |
 | 14 | .github/workflows/{ci.yml,docker.yml} | ✅ | ci 含 `-race`（補遺留 A）；docker 推 ghcr 多平台 |
 | 15 | git init + 10 個原子提交 + 建 repo s12ryt/vylo + push | ✅ | semantic 英文；無 sisyphus 標記 |
+| 16 | 線上全站驗收（4 路由 + 完整廣告流程 + 手機版面） | ✅ | 真短鏈 vylo.cc/Q8Txvx；走完 2 層廣告準確落回 /thanks；390×844 無橫向溢出 |
+| 17 | 補 favicon / robots / og 預覽圖 + description・OG・Twitter meta | ✅ | 修掉每頁 favicon 404；分享連結原本零預覽 |
+| 18 | 安全標頭（nosniff/DENY/no-referrer/CSP）+ `/go` no-store | ✅ | 新增 3 個測試；共 10 個 server 測試 |
 
 ## 未盡事項 / 遺留
 
 | # | 事項 | 狀態 | 說明 |
 |---|------|------|------|
 | A | `go test -race ./...` | ✅ | 已改由 CI（ubuntu-latest）每次 push/PR 跑 `-race -count=1` 補驗（Windows 無 gcc 跑不了） |
-| B | 真實 Vylo token 端到端 | ⏸ | 部署時填入正式 VYLO_API_TOKEN，點一次 /go 確認真短鏈跳轉 |
-| C | Nginx/Caddy 反代 + HTTPS | ⏸ | 部署階段；記得 TARGET_URL 改正式域名 |
-| D | VPS 實機 `docker run` ghcr 鏡像 | ⏸ | 鏡像已驗證 public（匿名 tags/list 通過：main/latest/sha-3c14628），pull 免登入 |
+| B | 真實 Vylo token 端到端 | ✅ | 線上實測：`/go` → 302 vylo.cc/Q8Txvx，Continue → `/wait` → Unlock → 兩層廣告 → 準確落回 /thanks |
+| C | Nginx/Caddy 反代 + HTTPS | ✅ | 實際由 Cloudflare 前置（cf-ray/Server: cloudflare），https 正常、TARGET_URL 已是正式域名 |
+| D | VPS 實機 `docker run` ghcr 鏡像 | ✅ | 線上 https://ad-vps-fr.1000918.xyz/ 即為該鏡像 |
+| E | http → https 強制跳轉 | ⏸ | 純 http 仍回 200；需在 Cloudflare 面板開 Always Use HTTPS（非程式碼可控） |
 
 ## 明確不做（依需求確認）
 

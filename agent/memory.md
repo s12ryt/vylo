@@ -53,3 +53,24 @@
 | 驗證 | 執行 | Actions：CI 1m26s ✅（vet+test -race+build 全綠，遺留 A 正式關閉）；Docker 7m39s ✅ | run 40255233746/40255233748 |
 | 驗證 | 執行 | ghcr 鏡像匿名 tags/list 通過 | tags: main, latest, sha-3c14628；package 隨 repo 改 public（繼承可見性），pull 免登入；gh token 無 read:packages scope 故用 registry API 驗證 |
 | 編輯 | 更新 | README.md | Docker 段改為 public 直接拉取說明 |
+
+## 2026-10-26（第三輪：線上驗收 + 靜態資產／SEO／安全標頭）
+
+> 工作目錄為 `F:\Project\ad\vylo-skript`（空殼，僅放 Playwright 產物），實際程式在 `F:\Project\ad\vylo`。
+
+| 時間 | 操作 | 對象 | 備註 |
+|------|------|------|------|
+| 驗收 | HTTP | https://ad-vps-fr.1000918.xyz/ | `/`=200、`/thanks`=200、`/healthz`=200 ok、`/go`=302 `https://vylo.cc/Q8Txvx`、POST /go=405、未知路徑=404 |
+| 驗收 | 瀏覽器 | Vylo 廣告流程 | Continue → `/wait`（wait token 解出 `r:ad-vps-fr.1000918.xyz`, `s:2`）→ 2s 倒數 → Unlock → 兩層廣告 → 準確落回 `/thanks`；廣告 iframe 會擋滑鼠事件，需 `document.getElementById('step-btn').click()` 直接觸發（Vylo 正常行為，非本站 bug） |
+| 驗收 | 版面 | 390×844 | scrollWidth 390 = clientWidth 390，無橫向溢出；主按鈕 236×62 完整在視窗內 |
+| 發現 | 問題 | `/favicon.ico` | 404，每次載入噴 console error；無 `link[rel=icon]`、無 description、零 OG/Twitter meta → 分享無預覽 |
+| 發現 | 問題 | 回應標頭 | 只有 Content-Type / Cache-Control，無任何安全標頭；`/go` 未標 no-store |
+| 建立 | 寫入 | web/favicon.svg、web/icon.png(180×180)、web/og.png(1200×630)、web/robots.txt | 圖檔用 PowerShell + System.Drawing 產生（System.Drawing 繪多點線需 `[System.Drawing.PointF[]]` 轉型，否則選到 Point 多載報錯）；robots 排除 `/go` 以免爬蟲燒短網址額度 |
+| 編輯 | 更新 | web/web.go | embed 清單擴為 `index.html thanks.html favicon.svg icon.png og.png robots.txt` |
+| 編輯 | 更新 | web/{index,thanks}.html | 加 description、theme-color、icon/apple-touch-icon、og:*（含 1200×630 圖）、twitter:card=summary_large_image；og:url 寫死正式域名（換域名要同步改） |
+| 重構 | 編輯 | internal/server/server.go | `serveHTML` 泛化為 `serveAsset(name, contentType, cacheControl)`；新增 5 條資產路由；新增 `securityHeaders` 中介層（nosniff / X-Frame-Options DENY / no-referrer / COOP / Permissions-Policy / CSP：style 需 `'unsafe-inline'` 因頁面用內嵌 `<style>`，script-src 'none'） |
+| TDD | 編輯 | internal/server/server_test.go | testStaticFS 補 4 個假資產；新增 TestStaticAssets / TestSecurityHeaders / TestGoIsNotCached |
+| 回歸 | 執行 | gofmt -l + go vet ./... + go test ./... -count=1 | 全綠（server 套件 1.23s） |
+| 驗證 | 執行 | 本機 exe（PORT=18080，DUMMY token） | 9 條路徑狀態碼/型別/大小全對；`/go` fallback 302 → TARGET_URL 且 Cache-Control no-store |
+| git | 執行 | 2 個原子提交 | `e6e67c0 feat(web): …`、`9df211c feat(server): …`（第一次誤把兩者併成一個提交，已 `reset --soft` 重新拆開） |
+| 待辦 | 記錄 | Cloudflare 面板 | http→https 仍回 200；需開 Always Use HTTPS（非程式碼可控） |
